@@ -5,7 +5,6 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// --- MIDDLEWARE ---
 const authMiddleware = (req, res, next) => {
   const login = req.headers['x-login'];
   const password = req.headers['x-password'];
@@ -27,8 +26,16 @@ const adminOnlyMiddleware = (req, res, next) => {
   next();
 };
 
-// --- ROUTES ---
-// Доступ тільки для аутентифікованих користувачів
+const loggingMiddleware = (req, res, next) => {
+  const timestamp = new Date().toISOString();
+  const method = req.method;
+  const url = req.url;
+  console.log(`[${timestamp}] ${method} ${url}`);
+  next();
+};
+
+app.use(loggingMiddleware);
+
 app.get('/documents', authMiddleware, (req, res) => {
   res.status(200).json(documents);
 });
@@ -40,12 +47,11 @@ app.post('/documents', authMiddleware, (req, res) => {
   res.status(201).json(newDocument);
 });
 
-// Доступ тільки для адміністраторів
 app.get('/employees', authMiddleware, adminOnlyMiddleware, (req, res) => {
   res.status(200).json(employees);
 });
 
-// --- START SERVER ---
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
